@@ -12,7 +12,7 @@ st.set_page_config(page_title="OracleLearn IA - Evasao", page_icon="IA", layout=
 st.title("OracleLearn IA - Predicao de Evasao")
 st.write(
     "Painel demonstrativo para validar o modelo de IA da Sprint 4. "
-    "Nesta entrega, o painel Streamlit consome a API Python em vez de uma integracao APEX real."
+    "O painel consome uma API REST em Python responsavel pelas predicoes do modelo."
 )
 
 

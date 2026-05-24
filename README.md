@@ -1,92 +1,128 @@
 # Sprint 4 IoT - OracleLearn IA de Predicao de Evasao
 
-Esta entrega implementa um modelo de Inteligencia Artificial para prever risco de evasao de alunos na plataforma OracleLearn. A integracao com APEX foi substituida, conforme escopo da demonstracao, por uma API Python consumida por um painel Streamlit demonstrativo.
+## Descricao
+
+Este projeto implementa uma solucao de Inteligencia Artificial para prever o risco de evasao de alunos na plataforma OracleLearn.
+
+A solucao utiliza um modelo de classificacao treinado com indicadores de engajamento academico. O resultado da predicao informa o nivel de risco do aluno, a probabilidade de evasao e uma recomendacao de intervencao.
 
 ## Objetivo
 
-Identificar alunos com maior probabilidade de abandono com base em indicadores de uso:
+Identificar alunos com maior probabilidade de abandono para apoiar a tomada de decisao de tutores e coordenadores.
+
+Variaveis utilizadas pelo modelo:
 
 - `horas_estudadas`
 - `exercicios_concluidos`
 - `media_notas`
 - `dias_inativos`
 
-O sistema permite cadastrar alunos, salvar seus indicadores, processar a turma em lote e retornar classe prevista, probabilidade de evasao, nivel de risco e recomendacao de intervencao.
+## Funcionalidades
 
-## Tecnologias
+- Geracao de base sintetica de alunos.
+- Treinamento de modelo de classificacao.
+- Salvamento do modelo treinado em arquivo `.pkl`.
+- Exposicao do modelo por API REST.
+- Cadastro de alunos.
+- Listagem e remocao de alunos cadastrados.
+- Processamento individual e em lote.
+- Exibicao de risco, probabilidade de evasao e recomendacao.
+- Painel demonstrativo em Streamlit.
+
+## Tecnologias Utilizadas
 
 - Python
+- Pandas
+- NumPy
 - Scikit-learn
 - Random Forest Classifier
-- Flask + Flask-CORS
+- Flask
+- Flask-CORS
 - Streamlit
 
-## Estrutura
+## Modelo de IA
 
-- `train_model.py`: gera dataset sintetico, treina o modelo e salva metricas.
-- `ai_core.py`: centraliza carregamento do modelo, validacao e inferencia.
-- `api.py`: API REST consumida pelo painel demonstrativo.
-- `app.py`: painel Streamlit demonstrativo.
-- `data/`: dataset sintetico gerado.
-- `data/alunos_cadastrados.json`: alunos salvos pelo painel/API.
-- `models/`: modelo treinado em `.pkl`.
-- `metrics/`: metricas, matriz de confusao e importancia das variaveis.
+O modelo utilizado foi o `RandomForestClassifier`, adequado para problemas de classificacao supervisionada. A saida do modelo indica se o aluno apresenta ou nao risco de evasao.
 
-## Como executar
+O treinamento gera:
 
-Crie o ambiente e instale dependencias:
+- dataset sintetico em `data/alunos_evasao_sintetico.csv`
+- modelo treinado em `models/modelo_evasao.pkl`
+- metricas em `metrics/model_metrics.json`
+
+Metricas obtidas no treinamento:
+
+- Acuracia: 90.8%
+- Variavel mais relevante: `dias_inativos`
+- Matriz de confusao e relatorio de classificacao salvos em JSON
+
+## Estrutura do Projeto
+
+```text
+Sprint4Iot/
+  ai_core.py
+  api.py
+  app.py
+  train_model.py
+  requirements.txt
+  README.md
+  LinkGithubVideo.txt
+  data/
+    alunos_evasao_sintetico.csv
+    alunos_cadastrados.json
+  metrics/
+    model_metrics.json
+  models/
+    modelo_evasao.pkl
+```
+
+## Como Executar
+
+Instalar dependencias:
 
 ```bash
-cd Sprint4Iot
 pip install -r requirements.txt
 ```
 
-No Windows/PowerShell, se quiser isolar o ambiente:
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-```
-
-Treine o modelo:
+Treinar o modelo:
 
 ```bash
 python train_model.py
 ```
 
-Inicie a API de IA:
+Iniciar a API:
 
 ```bash
 python api.py
 ```
 
-Teste a API:
-
-```bash
-curl http://localhost:8000/health
-```
-
-Opcionalmente, rode o painel Streamlit:
+Executar o painel:
 
 ```bash
 streamlit run app.py
 ```
 
-No painel, cadastre alunos, veja a turma salva e clique em `Processar turma cadastrada`.
+Apos iniciar o painel, acessar:
 
-## Endpoints
+```text
+http://localhost:8501
+```
+
+## Endpoints da API
 
 ### GET `/health`
 
-Verifica disponibilidade da API.
+Verifica se a API esta disponivel.
 
 ### GET `/model-info`
 
-Retorna tipo de modelo, features e metricas salvas.
+Retorna informacoes do modelo, variaveis utilizadas e metricas de treinamento.
 
 ### POST `/predict`
 
-Entrada:
+Realiza a predicao individual de um aluno.
+
+Exemplo de entrada:
 
 ```json
 {
@@ -97,30 +133,30 @@ Entrada:
 }
 ```
 
-Saida:
+Exemplo de saida:
 
 ```json
 {
   "classe": 1,
   "risco": "alto",
-  "probabilidade_evasao": 98.4,
+  "probabilidade_evasao": 83.33,
   "recomendacao": "Acionar tutor, oferecer monitoria e enviar mensagem personalizada ainda hoje."
 }
 ```
 
 ### POST `/predict-batch`
 
-Recebe uma lista de alunos e retorna predicoes em lote para simular um painel administrativo.
+Recebe uma lista de alunos e retorna as predicoes em lote.
 
 ### GET `/students`
 
-Lista os alunos cadastrados no sistema.
+Lista os alunos cadastrados.
 
 ### POST `/students`
 
-Cadastra um aluno e salva os indicadores em `data/alunos_cadastrados.json`.
+Cadastra um aluno e salva os dados em `data/alunos_cadastrados.json`.
 
-Entrada:
+Exemplo de entrada:
 
 ```json
 {
@@ -138,27 +174,22 @@ Remove um aluno cadastrado.
 
 ### DELETE `/students`
 
-Limpa toda a turma cadastrada.
+Remove todos os alunos cadastrados.
 
 ### POST `/students/predict`
 
-Processa todos os alunos cadastrados, envia os indicadores para o modelo de IA e retorna as recomendacoes por aluno.
+Processa todos os alunos cadastrados e retorna o risco de evasao de cada um.
 
-## Roteiro para o video
+## Fluxo de Uso
 
-1. Explicar que a IA substitui a analise manual de risco de abandono.
-2. Mostrar `train_model.py` treinando o Random Forest e gerando metricas.
-3. Rodar `python api.py` e abrir `/health` ou `/model-info`.
-4. Abrir o painel Streamlit no navegador.
-5. Cadastrar um aluno com bom desempenho e outro aluno com alto numero de dias inativos.
-6. Mostrar a tabela de turma cadastrada sendo atualizada.
-7. Clicar em `Processar turma cadastrada` e mostrar riscos diferentes no lote.
-8. Mostrar a recomendacao gerada para apoiar a decisao do tutor.
+1. Treinar o modelo com `train_model.py`.
+2. Iniciar a API com `api.py`.
+3. Abrir o painel Streamlit.
+4. Cadastrar alunos com seus indicadores academicos.
+5. Visualizar a turma cadastrada.
+6. Processar a turma com o modelo de IA.
+7. Analisar risco, probabilidade e recomendacao para cada aluno.
 
-## Observacao para entrega
+## Resultado
 
-Ao gerar o `.zip`, nao inclua `.venv/`, `__pycache__/` nem arquivos temporarios. O projeto deve levar o codigo-fonte, README, dataset/modelo/metricas gerados e o arquivo com links do video e GitHub.
-
-## Observacao sobre APEX
-
-A disciplina permitiu demonstrar a integracao fora do APEX nesta entrega. Por isso, o foco tecnico ficou em IA funcional, API REST consumivel e painel demonstrativo.
+A aplicacao permite que uma turma seja cadastrada e analisada por um modelo de IA. O sistema retorna uma classificacao de risco para cada aluno, permitindo identificar casos prioritarios para acompanhamento.
